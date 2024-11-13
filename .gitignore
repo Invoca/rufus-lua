@@ -18,3 +18,5 @@ pkg/
 
 Gemfile.lock
 
+.idea
+

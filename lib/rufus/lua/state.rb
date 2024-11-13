@@ -10,10 +10,7 @@ module Rufus::Lua
   # The entry point of rufus-lua is Rufus::Lua::State, look there.
   #
   module StateMixin
-
-    LUA_GLOBALSINDEX = -10002
-    LUA_ENVIRONINDEX = -10001
-    LUA_REGISTRYINDEX = -10000
+    LUA_REGISTRYINDEX = Lib::LUA_REGISTRYINDEX
     LUA_NOREF = -2
     LUA_REFNIL = -1
 
@@ -65,7 +62,7 @@ module Rufus::Lua
     def loadstring_and_call(s, bndng, filename, lineno)
 
       bottom = stack_top
-      chunk = filename ? "#{filename}:#{lineno}" : 'line'
+      chunk = filename ? "@#{filename}:#{lineno}" : 'line'
 
       err = Lib.luaL_loadbuffer(@pointer, s, s.bytesize, chunk)
       fail_if_error('eval:compile', err, bndng, filename, lineno)
@@ -244,8 +241,7 @@ module Rufus::Lua
     # Loads a Lua global value on top of the stack
     #
     def stack_load_global(name)
-
-      Lib.lua_getfield(@pointer, LUA_GLOBALSINDEX, name)
+      Lib.lua_getglobal(@pointer, name)
     end
 
     # Loads a field of the table currently on the top of the stack
@@ -323,7 +319,6 @@ module Rufus::Lua
     def fail_if_error(kind, err, bndng, filename, lineno)
 
       return if err < 1
-
       s = Lib.lua_tolstring(@pointer, -1, nil).read_string
       Lib.lua_settop(@pointer, -2)
 
@@ -559,11 +554,15 @@ module Rufus::Lua
           #
           # bind function at the global level
 
-          [ name, LUA_GLOBALSINDEX ]
+          [ name ]
         end
 
       Lib.lua_pushcclosure(@pointer, callback, 0)
-      Lib.lua_setfield(@pointer, index, name)
+      if index
+        Lib.lua_setfield(@pointer, index, name)
+      else
+        Lib.lua_setglobal(@pointer, name)
+      end
     end
 
     # Closes the state.
@@ -610,36 +609,12 @@ module Rufus::Lua
       Lib.lua_gc(@pointer, LUA_GCRESTART, 0)
     end
 
-    # #open_library(libname) - load a lua library via lua_call().
-    #
-    # This is needed because is the Lua 5.1 Reference Manual Section 5
-    # (http://www.lua.org/manual/5.1/manual.html#5) it says:
-    #
-    # "The luaopen_* functions (to open libraries) cannot be called
-    # directly, like a regular C function. They must be called through
-    # Lua, like a Lua function."
-    #
-    # "..you must call them like any other Lua C function, e.g., by using
-    # lua_call."
-    #
-    # (by Matthew Nielsen - https://github.com/xunker)
-    #
-    def open_library(libname)
-
-      Lib.lua_pushcclosure(
-        @pointer, lambda { |ptr| Lib.send("luaopen_#{libname}", @pointer) }, 0)
-      Lib.lua_pushstring(
-        @pointer, (libname.to_s == "base" ? "" : libname.to_s))
-      Lib.lua_call(
-        @pointer, 1, 0)
-    end
-
     def open_libraries(libs)
 
       if libs == true
         Lib.luaL_openlibs(@pointer)
       elsif libs.is_a?(Array)
-        libs.each { |l| open_library(l) }
+        libs.each { |l| Lib.open_library(l.to_s, @pointer) }
       end
     end
   end
