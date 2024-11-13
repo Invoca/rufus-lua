@@ -17,6 +17,9 @@ Gem::Specification.new do |s|
   s.description = %{
 ruby-ffi based bridge from Ruby to Lua
   }.strip
+  s.metadata      = {
+    'allowed_push_host' => "https://gem.fury.io/invoca"
+  }
 
   #s.files = `git ls-files`.split("\n")
   s.files = Dir[

@@ -1,8 +1,8 @@
+# frozen_string_literal: true
 
 module Rufus
-module Lua
-
-  VERSION = '1.1.5'
-end
+  module Lua
+    VERSION = "1.2.0"
+  end
 end
 

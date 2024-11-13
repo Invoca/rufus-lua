@@ -18,6 +18,16 @@ describe 'State and error handler' do
   end
 
   describe '#set_error_handler(lua_code)' do
+    let(:expected_message) do
+      <<~STR.strip
+        eval:pcall : 'mystuff.lua:77:3: in f
+        stack traceback:
+        \t[string "line"]:2: in function <[string "line"]:1>
+        \t[C]: in function 'error'
+        \tmystuff.lua:77:3: in function 'f'
+        \tmymain.lua:88:1: in main chunk' (2 LUA_ERRRUN)
+      STR
+    end
 
     it 'registers a function as error handler' do
 
@@ -39,14 +49,7 @@ describe 'State and error handler' do
       rescue Rufus::Lua::LuaError => le
       end
 
-      expect(le.message).to eq(%{
-eval:pcall : '[string "mystuff.lua:77"]:3: in f
-stack traceback:
-	[string "line"]:2: in function <[string "line"]:1>
-	[C]: in function 'error'
-	[string "mystuff.lua:77"]:3: in function 'f'
-	[string "mymain.lua:88"]:1: in main chunk' (2 LUA_ERRRUN)
-      }.strip)
+      expect(le.message).to eq(expected_message)
 
       expect(@s.send(:stack_top)).to eq(1)
     end
@@ -101,7 +104,15 @@ stack traceback:
   end
 
   describe '#set_error_handler(:traceback)' do
-
+    let(:expected_message) do
+      <<~STR.strip
+        eval:pcall : 'mystuff.lua:77:3: in f
+        stack traceback:
+        \t[C]: in function 'error'
+        \tmystuff.lua:77:3: in function 'f'
+        \tmymain.lua:88:1: in main chunk' (2 LUA_ERRRUN)
+      STR
+    end
     it 'sets a vanilla debug.traceback() error handler' do
 
       le = nil
@@ -118,13 +129,7 @@ stack traceback:
       rescue Rufus::Lua::LuaError => le
       end
 
-      expect(le.message).to eq(%{
-eval:pcall : '[string "mystuff.lua:77"]:3: in f
-stack traceback:
-	[C]: in function 'error'
-	[string "mystuff.lua:77"]:3: in function 'f'
-	[string "mymain.lua:88"]:1: in main chunk' (2 LUA_ERRRUN)
-      }.strip)
+      expect(le.message).to eq(expected_message)
     end
   end
 

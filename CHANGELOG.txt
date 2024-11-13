@@ -1,6 +1,10 @@
 
 = rufus-lua CHANGELOG.txt
 
+== rufus-lua - 1.2.0 released 2024/11/13
+
+- Add backwards compatible support for Lua 5.3 (Tristan Starck)
+
 
 == rufus-lua - 1.1.5    released 2019/10/19
 
