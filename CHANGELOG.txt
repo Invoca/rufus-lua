@@ -1,7 +1,7 @@
 
 = rufus-lua CHANGELOG.txt
 
-== rufus-lua - 1.2.0 unreleased
+== rufus-lua - 1.2.0 released 2024/11/13
 
 - Add backwards compatible support for Lua 5.3 (Tristan Starck)
 
