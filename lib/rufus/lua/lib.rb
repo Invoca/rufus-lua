@@ -2,6 +2,7 @@
 require 'ffi'
 require_relative 'lib_lua_5_1'
 require_relative 'lib_lua_5_3'
+# require_relative 'lib_lua_5_4'
 
 module Rufus
 module Lua
@@ -9,26 +10,12 @@ module Lua
   module Lib
     extend FFI::Library
 
-    def self.attempt_to_load_5_1
+    def self.attempt_to_load_lua(version)
+      lua_lib = "liblua#{version}"
       begin
-        ffi_lib('liblua5.1')
+        ffi_lib(lua_lib)
       rescue LoadError
-        paths = %w[ /usr/lib/*/liblua5.1.*so* ].inject([]) { |a, e| a.concat(Dir.glob(e)) }
-        begin
-          # second attempt
-          ffi_lib(paths)
-          true
-        rescue LoadError
-          false
-        end
-      end
-    end
-
-    def self.attempt_to_load_5_3
-      begin
-        ffi_lib('liblua5.3')
-      rescue LoadError
-        paths = %w[ /usr/lib/*/liblua5.3.*so* ].inject([]) { |a, e| a.concat(Dir.glob(e)) }
+        paths = ["/usr/lib/*/#{lua_lib}.*so*"].inject([]) { |a, e| a.concat(Dir.glob(e)) }
         begin
           # second attempt
           ffi_lib(paths)
@@ -49,15 +36,19 @@ module Lua
                       "5.1"
                     when /5.3/
                       "5.3"
+                    when /5.4/
+                      "5.4"
                     else
-                      raise "Unsupported Lua version: #{ENV['LUA_LIB']}, only 5.1 and 5.3 are supported"
+                      raise "Unsupported Lua version: #{ENV['LUA_LIB']}, only 5.4, 5.3, and 5.1 are supported"
                     end
-                  elsif attempt_to_load_5_3
+                  elsif attempt_to_load_lua("5.4")
+                    "5.4"
+                  elsif attempt_to_load_lua("5.3")
                     "5.3"
-                  elsif attempt_to_load_5_1
+                  elsif attempt_to_load_lua("5.1")
                     "5.1"
                   else
-                    raise "Didn't find the Lua dynamic library for liblua for version 5.1 or 5.3 on your system. " +
+                    raise "Didn't find the Lua dynamic library for liblua for version 5.4, 5.3, and 5.1 on your system. " +
                           "Set LUA_LIB in your environment if have that library"
                   end
 
@@ -66,8 +57,10 @@ module Lua
                                    Lua5_1
                                  when "5.3"
                                    Lua5_3
+                                 when "5.4"
+                                   Lua5_3 # No changes seem to be needed for 5.4
                                  else
-                                   raise "Unsupported Lua version: #{LUA_VERSION}, only 5.1 and 5.3 are supported"
+                                   raise "Unsupported Lua version: #{LUA_VERSION}, only 5.4, 5.3, and 5.1 are supported"
                                  end
 
     # Rufus::Lua::Lib.path returns the path to the library used.
