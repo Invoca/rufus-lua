@@ -2,7 +2,6 @@
 require 'ffi'
 require_relative 'lib_lua_5_1'
 require_relative 'lib_lua_5_3'
-# require_relative 'lib_lua_5_4'
 
 module Rufus
 module Lua
